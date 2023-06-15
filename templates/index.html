@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <center><h1>FURY</h1></center>
+   <center><div>
+        <h2 style="color: grey;" id="res-fury"></h2>
+        <input type="text" name="command" id="command-id">
+        <button onclick="myfury()" id="res-btn" >submit</button>
+   </div></center> 
+
+
+   <h1>Audio Recording</h1>
+   <button id="recordButton">Start Recording</button>
+   <button id="stopButton" disabled>Stop Recording</button>
+ 
+   <script>
+// Global variables
+let mediaRecorder;
+let audioChunks = [];
+
+// Get the buttons by their IDs
+const recordButton = document.getElementById('recordButton');
+const stopButton = document.getElementById('stopButton');
+
+// Function to handle audio data
+function handleAudioData(event) {
+  audioChunks.push(event.data);
+}
+
+// Function to handle media recorder stop event
+function handleRecorderStop(event) {
+  const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+  const audioFile = new File([audioBlob], 'recording.wav');
+
+  // Create a FormData object to send the file
+  const formData = new FormData();
+  formData.append('file', audioFile);
+
+  // Send the audio file to the Flask server
+  fetch('/audiostt', {
+    method: 'POST',
+    body: formData
+  })
+    .then(function(response) {
+      if (response.ok) {
+        console.log('Audio file uploaded successfully.');
+      } else {
+        console.error('Error uploading audio file.');
+      }
+    })
+    .catch(function(error) {
+      console.error('Error uploading audio file:', error);
+    });
+}
+
+// Get audio stream from user's microphone
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(function(stream) {
+    // Create a media recorder instance
+    mediaRecorder = new MediaRecorder(stream);
+
+    // Set the media recorder options
+    mediaRecorder.mimeType = 'audio/wav';
+    mediaRecorder.ondataavailable = handleAudioData;
+    mediaRecorder.onstop = handleRecorderStop;
+
+    // Start recording when the record button is clicked
+    recordButton.addEventListener('click', function() {
+      audioChunks = []; // Clear any existing audio chunks
+      mediaRecorder.start();
+      recordButton.disabled = true;
+      stopButton.disabled = false;
+    });
+
+    // Stop recording when the stop button is clicked
+    stopButton.addEventListener('click', function() {
+      mediaRecorder.stop();
+      recordButton.disabled = false;
+      stopButton.disabled = true;
+    });
+  })
+  .catch(function(error) {
+    console.error('Error accessing user media:', error);
+  });
+
+   </script>
+<script>
+function myfury(){
+    var comand =  document.getElementById("command-id")
+    var btn_f = document.getElementById("res-btn")
+
+    btn_f.disabled = true
+    comand.disabled = true
+
+    fetch('/fury-res?command='+comand.value)
+    .then((response) => response.json())
+    .then((json) => {
+        var audio_file = json['audio']
+        var response = json['reply']
+        console.log(audio_file)
+        console.log(response)
+        
+        var audio = new Audio(audio_file);
+        document.getElementById("res-fury").innerText = response
+
+        comand.value = ""
+        comand.disabled = false
+        btn_f.disabled = false
+
+        
+        audio.play();
+
+        
+
+    });
+    
+}
+</script>
+</body>
+</html>

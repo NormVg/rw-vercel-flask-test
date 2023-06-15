@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <script>
+// Create a new FormData object
+var formData = new FormData();
+
+// Append data to the FormData object
+formData.append('name', 'John');
+formData.append('email', 'john@example.com');
+
+// Create a new XMLHttpRequest object
+var xhr = new XMLHttpRequest();
+
+// Set up the request
+xhr.open('POST', 'http://127.0.0.1:5000/audio-stt');
+
+// Define a callback function to handle the response
+xhr.onload = function() {
+  if (xhr.status === 200) {
+    var response = JSON.parse(xhr.responseText);
+    console.log(response);
+  } else {
+    console.error('Request failed. Status: ' + xhr.status);
+  }
+};
+
+// Send the request with the FormData as the payload
+xhr.send(formData);
+
+    </script>
+</body>
+</html>
